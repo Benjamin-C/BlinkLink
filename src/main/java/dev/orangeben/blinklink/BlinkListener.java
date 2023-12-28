@@ -22,6 +22,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.projectiles.ProjectileSource;
@@ -113,7 +114,7 @@ public class BlinkListener implements Listener {
     @EventHandler
     public void playerMakeTeleporterEvent(BlockPlaceEvent e) {
         if(e.getBlock().getType() == Material.DRAGON_WALL_HEAD) {
-            e.getPlayer().sendMessage("Head");
+            // e.getPlayer().sendMessage("Head");
             // Might be a teleporter, let's see!
             Location bl = e.getBlock().getLocation();
             if(Teleporter.isSenderFunctional(bl, e.getPlayer())) {
@@ -126,6 +127,7 @@ public class BlinkListener implements Listener {
                 meta.displayName(Component.text(Strings.TPSTICK_NAME).color(TextColor.fromHexString("258273")));
                 // Add enchant glint
                 meta.addEnchant(Enchantment.DURABILITY, 1, false);
+                // Hide the enchantment name
                 // Set the lore text
                 List<Component> lore;
                 if(!meta.hasLore()) {
@@ -136,6 +138,7 @@ public class BlinkListener implements Listener {
                 lore.add(Component.text(Teleporter.serializeLocation(bl)));
                 meta.lore(lore);
                 newtpstick.setItemMeta(meta);
+                newtpstick.addItemFlags(ItemFlag.HIDE_ENCHANTS);
                 e.getPlayer().getInventory().addItem(newtpstick);
                 // e.getPlayer().sendMessage("New stick for you!");
             } else if(BlinkLink.config.getBoolean(ConfigKeys.BUILD_MSG_ON_FAILED_START)){
