@@ -127,7 +127,6 @@ public class BlinkListener implements Listener {
                 meta.displayName(Component.text(Strings.TPSTICK_NAME).color(TextColor.fromHexString("258273")));
                 // Add enchant glint
                 meta.addEnchant(Enchantment.DURABILITY, 1, false);
-                // Hide the enchantment name
                 // Set the lore text
                 List<Component> lore;
                 if(!meta.hasLore()) {
@@ -138,6 +137,7 @@ public class BlinkListener implements Listener {
                 lore.add(Component.text(Teleporter.serializeLocation(bl)));
                 meta.lore(lore);
                 newtpstick.setItemMeta(meta);
+                // Hide the enchantment name
                 newtpstick.addItemFlags(ItemFlag.HIDE_ENCHANTS);
                 e.getPlayer().getInventory().addItem(newtpstick);
                 // e.getPlayer().sendMessage("New stick for you!");
