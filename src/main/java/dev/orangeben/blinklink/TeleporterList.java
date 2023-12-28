@@ -95,7 +95,11 @@ public class TeleporterList {
         tpers = new ArrayList<Teleporter>();
     }
     
-    // Adds a new teleporter
+    /**
+     * Adds a new teleporter
+     * 
+     * @param t The teleporter to add
+     */
     public void add(Teleporter t) {
         addInternal(t);
         save();
@@ -112,7 +116,12 @@ public class TeleporterList {
         tpers.add(t);
     }
 
-    // Get a teleporter from a location
+    /**
+     * Gets a teleporter from a given location
+     * 
+     * @param l The location the teleporter is teleporting from
+     * @return  The teleporter
+     */
     public Teleporter get(Location l) {
         for(Teleporter t : tpers) {
             if(t.getFrom().getBlockX() == l.getBlockX() && t.getFrom().getBlockY() == l.getBlockY() && t.getFrom().getBlockZ() == l.getBlockZ()) {
@@ -121,52 +130,105 @@ public class TeleporterList {
         }
         return null;
     }
+    /**
+     * Gets a teleporter from a given block
+     * 
+     * @param b The block at the location the teleporter is teleporting from (the dragon head)
+     * @return  The teleporter
+     */
     public Teleporter get(Block b) {
         return get(b.getLocation());
     }
 
-    // Checks if a teleporter is registered from a given location
+    /**
+     * Checks if a teleporter is registered from a given location
+     * 
+     * @param l The location the teleporter is teleporting from
+     * @return  Wether there is a teleporter from that location or not
+     */
     public boolean check(Location l) {
         return get(l) != null;
     }
+    /**
+     * Checks if a teleporter is registered from a given location
+     * 
+     * @param b The block at the location the teleporter is teleporting from (the dragon head)
+     * @return  Wether there is a teleporter from that block or not
+     */
     public boolean check(Block b) {
         return b != null && get(b.getLocation()) != null;
     }
 
-    // Checks if a teleporter is functional from a given location
+    /**
+     * Checks if a teleporter is functional from a given location
+     * 
+     * @param l The location the teleporter is teleporting from
+     * @return  Wether there is a functional teleporter from that location or not
+     */
     public boolean checkLink(Location l) {
         Teleporter t = get(l);
         return t != null && t.isOperational();
     }
+    /**
+     * Checks if a teleporter is functional from a given location
+     * 
+     * @param b The block at the location the teleporter is teleporting from (the dragon head)
+     * @return  Wether there is a functional teleporter from that block or not
+     */
     public boolean checkLink(Block b) {
         Teleporter t = get(b);
         return t != null && t.isOperational();
     }
 
-    // Get all teleporters
+    /**
+     * Gets all of the known teleporters
+     * 
+     * @return All the teleporters
+     */
     public List<Teleporter> getAll() {
         return tpers;
     }
 
-    // Get list size
+    /**
+     * Gets the number of teleporters on the list
+     * 
+     * @return The number of teleporters
+     */
     public int size() {
         return tpers.size();
     }
 
-    // Remove items
+    /**
+     * Removes a teleporter starting from a given location
+     * 
+     * @param l The location the teleporter is teleporting from
+     */
     public void remove(Location l) {
         tpers.remove(get(l));
         save();
     }
+    /**
+     * Removes a teleporter starting from a given block
+     * 
+     * @param b The block at the location the teleporter is teleporting from (the dragon head)
+     */
     public void remove(Block b) {
         remove(b.getLocation());
     }
 
+    /**
+     * Saves the list of teleporters to the file
+     */
     public void save() {
         SerializableTeleporterList stl = new SerializableTeleporterList(this);
         stl.saveData();
     }
 
+    /**
+     * Reads a list of teleporters from the file
+     * 
+     * @return All the teleporters from the file
+     */
     public static TeleporterList fromFile() {
         return SerializableTeleporterList.loadData();
     }
