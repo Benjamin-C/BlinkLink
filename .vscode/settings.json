@@ -1,0 +1,8 @@
+{
+    "files.autoGuessEncoding": true,
+    "java.jdt.ls.vmargs": "-Dfile.encoding=UTF-8",
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.saveActions.organizeImports": false,
+    "editor.pasteAs.enabled": "false",
+    "editor.pasteAs.showPasteSelector": "never"
+}

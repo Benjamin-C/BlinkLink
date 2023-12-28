@@ -1,0 +1,9 @@
+TestableBlock:
+  broadcast: false
+  particle: false
+  message: false
+Teleport:
+  cancelonbroken: true
+  debuginfo: false
+Build:
+  msgonbrokenstart: false
