@@ -10,7 +10,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.GZIPInputStream;
+import java.util.Random;
+
+import java.util.logging.Level;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -18,128 +20,25 @@ import org.bukkit.block.Block;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
 
-import dev.orangeben.blinklink.SerializableTeleporter;
+/**
+ * A list of teleporters in the server. Can be saved to a file.
+ */
+public class TeleporterList implements Serializable {
 
-public class TeleporterList {
-    
-    private class SerializableTeleporterList implements Serializable {
-        private static transient final long serialVersionUID = -1691025206524286331L;
-        
-        ArrayList<String> stp;
-
-        public SerializableTeleporterList(TeleporterList tl) {
-            stp = new ArrayList<String>();
-            for(int i : tl.getAll().keySet()) {
-                SerializableTeleporter t = new SerializableTeleporter(tl.get(i), i);
-                t.setID(i);
-                stp.add(t.seralize());
-            }
-        }
-
-        private static TeleporterList deserialize(ArrayList<String> stp) {
-            TeleporterList tl = new TeleporterList();
-            for(String s : stp) {
-                SerializableTeleporter t = SerializableTeleporter.parse(s);
-                tl.addInternal(t, t.getID());
-            }
-            return tl;
-        }
-
-        private static String getSaveLocation() {
-            String wname = Bukkit.getWorlds().get(0).getName();
-            return wname + File.separatorChar + "blinklinks.bl";
-        }
-        
-        public static String getOldSaveLocation() {
-            String wname = Bukkit.getWorlds().get(0).getName();
-            return wname + File.separatorChar + "teleporters.tp";
-        }
-
-        public boolean saveData() {
-            try {
-                FileOutputStream fileOut = new FileOutputStream(getSaveLocation());
-                // GZIPOutputStream gzOut = new GZIPOutputStream(fileOut);
-                BukkitObjectOutputStream out = new BukkitObjectOutputStream(fileOut);
-                out.writeObject(stp);
-                out.close();
-                Bukkit.getLogger().info("Saved teleporters to " + getSaveLocation());
-                return true;
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-                return false;
-            }
-        }
-
-        @SuppressWarnings("unchecked")
-        public static TeleporterList loadData() {
-            try {
-                BukkitObjectInputStream in = null;
-                boolean wasOldFile = false;
-                try {
-                    in = new BukkitObjectInputStream(new FileInputStream(getSaveLocation()));
-                    Bukkit.getLogger().info("Loaded teleporters from file " + getSaveLocation() + " ... ");
-                } catch(FileNotFoundException e) {
-                    in = new BukkitObjectInputStream(new GZIPInputStream(new FileInputStream(getOldSaveLocation())));
-                    Bukkit.getLogger().info("Loaded teleporters from old file " + getOldSaveLocation() + " ... ");
-                    wasOldFile = true;
-                }
-
-                Object inobj = in.readObject();
-                try {
-                    ArrayList<String> stp = (ArrayList<String>) inobj;
-                    in.close();
-                    TeleporterList tl = SerializableTeleporterList.deserialize(stp);
-                    if(wasOldFile) {
-                        tl.save();
-                    }
-                    return tl;
-                } catch (ClassCastException e) {
-                    try {
-                        Bukkit.getLogger().info("Updating old teleport list");
-                        ArrayList<String[]> stp = (ArrayList<String[]>) inobj;
-                        TeleporterList tl = new TeleporterList();
-                        for(String[] s : stp) {
-                            Location from = Teleporter.parseLocation(s[0]);
-                            Location to = Teleporter.parseLocation(s[1]);
-                            if(from != null && to != null) {
-                                Teleporter t = new Teleporter(from, to);
-                                tl.addInternal(t, tl.getNewID());
-                            } else {
-                                Bukkit.getLogger().warning("Couldn't load teleporter");
-                            }
-                        }
-                        tl.save();
-                        return tl;
-                    } catch (Exception e2) {
-                        e2.printStackTrace();
-                    }
-                }
-                return null;
-            } catch(FileNotFoundException e) {
-                Bukkit.getLogger().warning("The teleporter file was not found.");
-                return new TeleporterList();
-            } catch(ClassNotFoundException e) {
-                Bukkit.getLogger().warning("The teleporter file was found but had a class error.");
-                return new TeleporterList();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return new TeleporterList();
-            }
-        }
-    }
-
+    /** The teleporters this list contains */
     private Map<Integer, Teleporter> tpers;
-    private int nextID = 1;
+    /** Randomizer to generate new IDs */
+    private transient Random randomizer = null;
 
     public TeleporterList() {
         tpers = new HashMap<Integer, Teleporter>();
     }
     
     /**
-     * Adds a new teleporter
+     * Adds a new teleporter with a newly generated ID and saves the teleporter list.
      * 
      * @param t The teleporter to add
+     * @return  The ID of the teleporter
      */
     public int add(Teleporter t) {
         int id = getNewID();
@@ -147,26 +46,43 @@ public class TeleporterList {
         save();
         return id;
     }
-    private void addInternal(Teleporter t, int id) {
+    /**
+     * Adds a new teleporter. Doesn't add a teleporter with the same ID or the same source/dest as an existing ones.
+     * @param t  The teleporter to add
+     * @param id The ID of the teleporter.
+     * @return   Wether the teleporter was added
+     */
+    private boolean addInternal(Teleporter t, int id) {
         // Avoid duplicated
         if(tpers.containsKey(id)) {
             Bukkit.getLogger().warning("Tried to add duplicate teleporter ID " + id + ", can't do that.");
-            return;
+            return false;
         }
         for(Teleporter q : tpers.values()) {
             if(q.equals(t)) {
                 Bukkit.getLogger().warning("Tried to add duplicate teleporter, can't do that.");
-                return;
+                return false;
             }
         }
         // Add if not duplicate
         tpers.put(id, t);
-        nextID = Math.max(nextID, id+1);
+        return true;
     }
 
-    /** Returns a new ID for a teleporter */
+    /**
+     * Returns a new ID for a teleporter. Generates IDs randomly then checks if they exist.
+     * The ID is guaranteed to be unique at time of generation, but it is not reserved until a teleporter with that ID is added.
+     * Use the {@link #add add()} method to 
+     */
     protected int getNewID() {
-        return nextID++;
+        if(randomizer == null) {
+            randomizer = new Random();
+        }
+        int id = 0;
+        do {
+            id = randomizer.nextInt();
+        } while(tpers.containsKey(id));
+        return id;
     }
 
     /**
@@ -185,10 +101,12 @@ public class TeleporterList {
     }
     /**
      * Gets a teleporter from a given block
+     * @Deprecated Use {@link #get(Location) get(Location)}
      * 
      * @param b The block at the location the teleporter is teleporting from (the dragon head)
      * @return  The teleporter
      */
+    @Deprecated
     public Teleporter get(Block b) {
         return get(b.getLocation());
     }
@@ -217,10 +135,11 @@ public class TeleporterList {
     }
     /**
      * Checks if a teleporter is registered from a given location
-     * 
+     * @Deprecated Use {@link #check(Location) check(Location)}
      * @param b The block at the location the teleporter is teleporting from (the dragon head)
      * @return  Wether there is a teleporter from that block or not
      */
+    @Deprecated
     public boolean check(Block b) {
         return b != null && get(b.getLocation()) != null;
     }
@@ -237,10 +156,11 @@ public class TeleporterList {
     }
     /**
      * Checks if a teleporter is functional from a given location
-     * 
+     * @Deprecated Use {@link #checkLink(Location) checkLink(Location)}
      * @param b The block at the location the teleporter is teleporting from (the dragon head)
      * @return  Wether there is a functional teleporter from that block or not
      */
+    @Deprecated
     public boolean checkLink(Block b) {
         Teleporter t = get(b);
         return t != null && t.isOperational();
@@ -295,18 +215,34 @@ public class TeleporterList {
      * @param l The location the teleporter is teleporting from
      */
     public void remove(Location l) {
+        List<Integer> tr = new ArrayList<Integer>();
         for(int i : tpers.keySet()) {
-            if(Teleporter.comprareLocations(l, tpers.get(i).getFrom())) {
-                tpers.remove(i);
+            if(LocationUtils.comprareLocations(l, tpers.get(i).getFrom())) {
+                // tpers.remove(i);
+                tr.add(i);
             }
+        }
+        for(int i : tr) {
+            tpers.remove(i);
         }
     }
 
     /**
-     * Removes a teleporter starting from a given block
+     * Gets the file location where the list is saved to
      * 
+     * @return The file path
+     */
+    private static String getSaveLocation() {
+        String wname = Bukkit.getWorlds().get(0).getName();
+        return wname + File.separatorChar + "blinklink.bl";
+    }
+
+    /**
+     * Removes a teleporter starting from a given block
+     * @Deprecated use {@link #remove() remove(Location)}
      * @param b The block at the location the teleporter is teleporting from (the dragon head)
      */
+    @Deprecated
     public void remove(Block b) {
         remove(b.getLocation());
     }
@@ -315,8 +251,19 @@ public class TeleporterList {
      * Saves the list of teleporters to the file
      */
     public void save() {
-        SerializableTeleporterList stl = new SerializableTeleporterList(this);
-        stl.saveData();
+        // SerializableTeleporterList stl = new SerializableTeleporterList(this);
+        // stl.saveData();
+        try {
+            FileOutputStream fileOut = new FileOutputStream(getSaveLocation());
+            // GZIPOutputStream gzOut = new GZIPOutputStream(fileOut);
+            BukkitObjectOutputStream out = new BukkitObjectOutputStream(fileOut);
+            out.writeObject(this);
+            out.close();
+            Bukkit.getLogger().info("Saved teleporters to " + getSaveLocation());
+        } catch (IOException e) {
+            Bukkit.getLogger().severe("Failed to save teleporters");
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -325,7 +272,25 @@ public class TeleporterList {
      * @return All the teleporters from the file
      */
     public static TeleporterList fromFile() {
-        return SerializableTeleporterList.loadData();
+        // return SerializableTeleporterList.loadData();
+        try {
+            BukkitObjectInputStream in = new BukkitObjectInputStream(new FileInputStream(getSaveLocation()));
+            
+            TeleporterList tpl = (TeleporterList) in.readObject();
+            in.close();
+
+            return tpl;
+        } catch(FileNotFoundException e) {
+            Bukkit.getLogger().warning("The teleporter file was not found. A new one has been created.");
+            TeleporterList tl = new TeleporterList();
+            tl.save();
+            return tl;
+        } catch(Exception e) {
+            Bukkit.getLogger().log(Level.WARNING, "The teleporter file was found but had an error. A new one has been created.", e);
+            TeleporterList tl = new TeleporterList();
+            tl.save();
+            return tl;
+        }
     }
 
 }

@@ -1,24 +1,30 @@
 package dev.orangeben.blinklink;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
-public class Teleporter {
+import dev.orangeben.blinklink.TestableBlock.TestType;
+
+/**
+ * Represents a BlinkLink teleporter.
+ * 
+ * from is where the teleporter leaves from. It is the dragon head on the sending structure.
+ * to is where the teleporter goes to. It is the air above the obsidian on the receiving structure.
+ */
+public class Teleporter implements Serializable {
     
-    protected Location from= null;
+    protected Location from = null;
     protected Location to = null;
-    protected int id = 0;
 
     public Teleporter(Location from, Location to) {
-        this.from = from.clone();
-        if(to != null) {
-            this.to = to.clone().add(0.5, 0, 0.5);
-        }
+        setFrom(from);
+        setTo(to);
     }
     protected Teleporter() {
         // Do all setup manually yourself! Don't use this unless you know what you're doing!
@@ -46,7 +52,7 @@ public class Teleporter {
      * @param l The location
      */
     public void setFrom(Location l) {
-        this.from = l;
+        this.from = l.clone();
     }
 
     /**
@@ -55,10 +61,19 @@ public class Teleporter {
      * @param l The location
      */
     public void setTo(Location l) {
-        this.to = l;
+        if(l != null) {
+            this.to = l.clone();
+            // this.to = l.clone().add(0.5, 0, 0.5);
+        } else {
+            this.to = null;
+        }
     }
 
-    // Check if this teleporter is fully operation
+    /**
+     * Checks if both the sending and receiving structures exist.
+     * 
+     * @return If both structures exist.
+     */
     public boolean isOperational() {
         return isSenderFunctional(from) && isReceiverFunctional(to);
     }
@@ -72,34 +87,19 @@ public class Teleporter {
     public boolean equals(Object thatObj) {
         if(thatObj != null && thatObj instanceof Teleporter) {
             Teleporter that = (Teleporter) thatObj;
-            return comprareLocations(this.from, that.from) && comprareLocations(this.to, that.to);
-            // return this.from.getWorld().equals(that.from.getWorld()) && 
-            //     this.from.getBlockX() == that.from.getBlockX() && 
-            //     this.from.getBlockY() == that.from.getBlockY() && 
-            //     this.from.getBlockZ() == that.from.getBlockZ() && 
-            //     (
-            //         (this.to == null && that.to == null) ||
-            //         (this.to != null && that.to != null &&
-            //         this.to.getBlockX() == that.to.getBlockX() &&
-            //         this.to.getBlockY() == that.to.getBlockY() &&
-            //         this.to.getBlockZ() == that.to.getBlockZ())
-            //     );
-                
+            return LocationUtils.comprareLocations(this.from, that.from) && LocationUtils.comprareLocations(this.to, that.to);
         }
         return false;
     }
 
-    public static boolean comprareLocations(Location a, Location b) {
-        return
-            (a == null && b == null) // Both are null
-            ||
-            ( // If Both are not null, then the blocks must match
-                a != null && b != null &&
-                a.getWorld().equals(b.getWorld()) &&
-                a.getBlockX() == b.getBlockX() &&
-                a.getBlockY() == b.getBlockY() &&
-                a.getBlockZ() == b.getBlockZ()
-            );
+    private void writeObject(ObjectOutputStream oos) throws IOException {
+        oos.writeObject(LocationUtils.serialize(from));
+        oos.writeObject(LocationUtils.serialize(to));
+    }
+
+    private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
+        this.setFrom(LocationUtils.deserialize((String) ois.readObject()));
+        this.setTo(LocationUtils.deserialize((String) ois.readObject()));
     }
 
     // Static methods to test if potential or existing teleporters work
@@ -130,9 +130,21 @@ public class Teleporter {
         new TestableBlock(0, -1, 0, Material.END_ROD),
     };
 
+
+    /**
+     * Checks if a sending structure at a given location is functional
+     * @param from The location of the dragon head
+     * @return If that is a valid sending structure
+     */
     public static boolean isSenderFunctional(Location from) {
         return isSenderFunctional(from, null);
     }
+    /**
+     * Checks if a sending structure at a given location is functional
+     * @param from The location of the dragon head
+     * @param p    The player to show debug messages to if they are enabled in the server config
+     * @return If that is a valid sending structure
+     */
     public static boolean isSenderFunctional(Location from, Player p) {
         if(from == null) {
             return false;
@@ -145,7 +157,7 @@ public class Teleporter {
         // Then find the index of the direction to go
         for(int i = 0; i < 4; i++) {
             // if(checkBlock(from, -1, 0, 0, Material.OBSIDIAN, i)) {
-            if(fromPortalArrangement[1].test(from, i, p)) {
+            if(fromPortalArrangement[1].test(from, i, p, true)) {
                 // Found direction, look for everything else
                 // Check for the end stone behind
                 for(TestableBlock b : fromPortalArrangement) {
@@ -164,11 +176,21 @@ public class Teleporter {
     private static TestableBlock receiverEdge = new TestableBlock(1, -1, 0, Material.PURPUR_STAIRS);
     private static TestableBlock receiverCorner = new TestableBlock(1, -1, 1, Material.PURPUR_PILLAR);
 
+    /**
+     * Checks if a receiving structure at a given location is functional
+     * @param from The location of the air above the obsidian
+     * @param p    The player to show debug messages to if they are enabled in the server config
+     * @return If that is a valid receiving structure
+     */
     public static boolean isReceiverFunctional(Location to) {
         return isReceiverFunctional(to, null);
     }
+    /**
+     * Checks if a receiving structure at a given location is functional
+     * @param from The location of the air above the obsidian
+     * @return If that is a valid receiving structure
+     */
     public static boolean isReceiverFunctional(Location to, Player p) {
-        // TODO check if there is a safe spawning location
         if(to == null) {
             return false;
         }
@@ -181,33 +203,10 @@ public class Teleporter {
         for(int x = -1; x <= 1; x++) {
             for(int y = 0; y <= 1; y++) {
                 for(int z = -1; z <= 1; z++) {
-                    score += (to.clone().add(x, y, z).getBlock().isSolid()) ? 0 : 1;
+                    score += ((new TestableBlock(x, y, z, TestType.PASSABLE)).test(to, p)) ? 1 : 0;
                 }
             }
         }
         return score == 27;
-    }
-
-    public static String serializeLocation(Location l) {
-        return l.getWorld().getName() + "<" + l.getBlockX() + "," + l.getBlockY() + "," + l.getBlockZ() + ">";
-    }
-
-    public static Location parseLocation(String s) {
-        Pattern p = Pattern.compile("([^<]+)<(-?\\d+),(-?\\d+),(-?\\d+)");
-        Matcher m = p.matcher(s);
-        if(m.find()) {
-            try {
-                int x = Integer.parseInt(m.group(2));
-                int y = Integer.parseInt(m.group(3));
-                int z = Integer.parseInt(m.group(4));
-                return new Location(Bukkit.getServer().getWorld(m.group(1)), x, y, z);
-            } catch (Exception e) {
-                // TODO: handle exception
-                e.printStackTrace();
-            }
-        } else {
-            System.out.println("[BlinkLink] No match found for regex while parsing location " + s);
-        }
-        return null;
     }
 }

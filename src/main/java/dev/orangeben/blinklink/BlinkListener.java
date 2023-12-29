@@ -52,7 +52,7 @@ public class BlinkListener implements Listener {
             Location from = event.getFrom();
             Player p = event.getPlayer();
             if(currentTPs.containsKey(p)) {
-                Location to = currentTPs.get(p);
+                Location to = currentTPs.get(p).clone().add(0.5, 0, 0.5);
                 if(to != null) {
                     to.setDirection(from.getDirection());
                     // If the target dimension is different, we need to send the player there first
@@ -79,10 +79,11 @@ public class BlinkListener implements Listener {
             if(et instanceof Player) {
                 Player p = (Player) et;
                 Block b = e.getHitBlock();
-                if(tl.check(b)) {
-                    Teleporter t = tl.get(b);
+                if(tl.check(b.getLocation())) {
+                    Teleporter t = tl.get(b.getLocation());
                     if(Teleporter.isSenderFunctional(t.getFrom(), p)) {
                         if(t.getTo() != null) {
+                            p.sendMessage(LocationUtils.serialize(t.getTo()));
                             if(Teleporter.isReceiverFunctional(t.getTo(), p)) {
                                 currentTPs.put(p, t.getTo());
                             } else {
@@ -111,9 +112,9 @@ public class BlinkListener implements Listener {
     @EventHandler
     public void playerBreakTeleporterEvent(BlockBreakEvent e) {
         if(e.getBlock().getType() == Material.DRAGON_WALL_HEAD) {
-            if(tl.check(e.getBlock())) {
+            if(tl.check(e.getBlock().getLocation())) {
                 e.getPlayer().sendMessage("You just broke a teleporter.");
-                tl.remove(e.getBlock());
+                tl.remove(e.getBlock().getLocation());
             }
         }
     }
@@ -144,7 +145,7 @@ public class BlinkListener implements Listener {
                 } else {
                     lore = meta.lore();
                 }
-                lore.add(Component.text(Teleporter.serializeLocation(bl)));
+                lore.add(Component.text(bl.getWorld().getName() + "<" + bl.getBlockX() + "," + bl.getBlockY() + "," + bl.getBlockZ() + ">"));
                 meta.lore(lore);
                 newtpstick.setItemMeta(meta);
                 // Hide the enchantment name
@@ -160,7 +161,7 @@ public class BlinkListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerInitializeTeleporterEvent(PlayerInteractEvent e) {
+    public void onPlayerLinkTeleporterEvent(PlayerInteractEvent e) {
         if(e.getAction() == Action.RIGHT_CLICK_BLOCK) {
             ItemStack is = e.getItem();
             if(is == null) { return; } // Don't continue if the item stack doesn't exist
@@ -170,7 +171,7 @@ public class BlinkListener implements Listener {
             // if(im.displayName() == null) { return; } // Don't continue if there is no display name
             NBTItem ni = new NBTItem(is);
             // if(((TextComponent) im.displayName()).content().equals(Strings.TPSTICK_NAME)) {
-            if(ni.hasTag(Strings.TPSTICK_ID_KEY) && ni.getInteger(Strings.TPSTICK_ID_KEY) > 0) {
+            if(ni.hasTag(Strings.TPSTICK_ID_KEY)) {
                 Location dest = e.getClickedBlock().getLocation().add(0, 1, 0);
                 Player p = e.getPlayer();
                 if(Teleporter.isReceiverFunctional(dest, p)) {
@@ -187,6 +188,7 @@ public class BlinkListener implements Listener {
                             p.sendMessage("Teleporter created");
                             // Remove their stick
                             is.setAmount(0);
+                            Teleporter.isReceiverFunctional(tl.get(id).getTo(), p);
                         } else {
                             p.sendMessage("The sender is not functional. Fix it before you can create the link.");
                         }
