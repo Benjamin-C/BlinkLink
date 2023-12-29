@@ -129,7 +129,7 @@ public class BlinkListener implements Listener {
                 e.getPlayer().sendMessage("Click on the obsidian of the landing pad to link this teleporter to it.");
                 // Create the teleporter
                 Teleporter tper = new Teleporter(bl, null);
-                tl.add(tper);
+                int id = tl.add(tper);
                 // New linking stick
                 ItemStack newtpstick = new ItemStack(Material.STICK);
                 ItemMeta meta = newtpstick.getItemMeta();
@@ -150,7 +150,7 @@ public class BlinkListener implements Listener {
                 // Hide the enchantment name
                 newtpstick.addItemFlags(ItemFlag.HIDE_ENCHANTS);
                 NBTItem nbti = new NBTItem(newtpstick);
-                nbti.setInteger(Strings.TPSTICK_ID_KEY, tper.getID());
+                nbti.setInteger(Strings.TPSTICK_ID_KEY, id);
                 e.getPlayer().getInventory().addItem(nbti.getItem());
                 // e.getPlayer().sendMessage("New stick for you!");
             } else if(BlinkLink.config.getBoolean(ConfigKeys.BUILD_MSG_ON_FAILED_START)){
@@ -177,11 +177,12 @@ public class BlinkListener implements Listener {
                     // e.getPlayer().sendMessage("You are trying to make a teleporter to " + stringifyLocation(dest));
                     // String source = ((TextComponent) im.lore().get(0)).content();
                     // Location l = Teleporter.parseLocation(source);
-                    Teleporter t = tl.get(ni.getInteger(Strings.TPSTICK_ID_KEY));
+                    int id = ni.getInteger(Strings.TPSTICK_ID_KEY);
+                    Teleporter t = tl.get(id);
                     if(t != null) {
                         if(Teleporter.isSenderFunctional(t.getFrom(), p)) {
                             // Set the destination of the teleporter
-                            tl.updateTo(t.getID(), dest);
+                            tl.updateTo(id, dest);
                             // Alert the user
                             p.sendMessage("Teleporter created");
                             // Remove their stick

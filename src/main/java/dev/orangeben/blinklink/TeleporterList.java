@@ -7,7 +7,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 import org.bukkit.Bukkit;
@@ -15,6 +17,8 @@ import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
+
+import dev.orangeben.blinklink.SerializableTeleporter;
 
 public class TeleporterList {
     
@@ -25,7 +29,9 @@ public class TeleporterList {
 
         public SerializableTeleporterList(TeleporterList tl) {
             stp = new ArrayList<String>();
-            for(Teleporter t : tl.getAll()) {
+            for(int i : tl.getAll().keySet()) {
+                SerializableTeleporter t = new SerializableTeleporter(tl.get(i), i);
+                t.setID(i);
                 stp.add(t.seralize());
             }
         }
@@ -33,7 +39,8 @@ public class TeleporterList {
         private static TeleporterList deserialize(ArrayList<String> stp) {
             TeleporterList tl = new TeleporterList();
             for(String s : stp) {
-                tl.addInternal(Teleporter.parse(s));
+                SerializableTeleporter t = SerializableTeleporter.parse(s);
+                tl.addInternal(t, t.getID());
             }
             return tl;
         }
@@ -97,8 +104,7 @@ public class TeleporterList {
                             Location to = Teleporter.parseLocation(s[1]);
                             if(from != null && to != null) {
                                 Teleporter t = new Teleporter(from, to);
-                                t.setID(tl.getNewID());
-                                tl.addInternal(t);
+                                tl.addInternal(t, tl.getNewID());
                             } else {
                                 Bukkit.getLogger().warning("Couldn't load teleporter");
                             }
@@ -123,11 +129,11 @@ public class TeleporterList {
         }
     }
 
-    private List<Teleporter> tpers;
+    private Map<Integer, Teleporter> tpers;
     private int nextID = 1;
 
     public TeleporterList() {
-        tpers = new ArrayList<Teleporter>();
+        tpers = new HashMap<Integer, Teleporter>();
     }
     
     /**
@@ -135,26 +141,27 @@ public class TeleporterList {
      * 
      * @param t The teleporter to add
      */
-    public void add(Teleporter t) {
-        t.setID(getNewID());
-        addInternal(t);
+    public int add(Teleporter t) {
+        int id = getNewID();
+        addInternal(t, id);
         save();
+        return id;
     }
-    private void addInternal(Teleporter t) {
+    private void addInternal(Teleporter t, int id) {
         // Avoid duplicated
-        for(Teleporter q : tpers) {
+        if(tpers.containsKey(id)) {
+            Bukkit.getLogger().warning("Tried to add duplicate teleporter ID " + id + ", can't do that.");
+            return;
+        }
+        for(Teleporter q : tpers.values()) {
             if(q.equals(t)) {
                 Bukkit.getLogger().warning("Tried to add duplicate teleporter, can't do that.");
                 return;
             }
-            if(q.getID() == t.getID()) {
-                Bukkit.getLogger().warning("Tried to add duplicate teleporter ID " + t.getID() + ", can't do that.");
-                return;
-            }
         }
         // Add if not duplicate
-        tpers.add(t);
-        nextID = Math.max(nextID, t.getID()+1);
+        tpers.put(id, t);
+        nextID = Math.max(nextID, id+1);
     }
 
     /** Returns a new ID for a teleporter */
@@ -169,7 +176,7 @@ public class TeleporterList {
      * @return  The teleporter
      */
     public Teleporter get(Location l) {
-        for(Teleporter t : tpers) {
+        for(Teleporter t : tpers.values()) {
             if(t.getFrom().getBlockX() == l.getBlockX() && t.getFrom().getBlockY() == l.getBlockY() && t.getFrom().getBlockZ() == l.getBlockZ()) {
                 return t;
             }
@@ -192,12 +199,11 @@ public class TeleporterList {
      * @return   The teleporter if it exists, null otherwise
      */
     public Teleporter get(int id) {
-        for(Teleporter t : tpers) {
-            if(t.getID() == id) {
-                return t;
-            }
+        if(tpers.containsKey(id)) {
+            return tpers.get(id);
+        } else {
+            return null;
         }
-        return null;
     }
 
     /**
@@ -245,7 +251,7 @@ public class TeleporterList {
      * 
      * @return All the teleporters
      */
-    public List<Teleporter> getAll() {
+    public Map<Integer, Teleporter> getAll() {
         return tpers;
     }
 
@@ -278,7 +284,7 @@ public class TeleporterList {
     public void updateTo(int from, Location to) {
         Teleporter t = get(from);
         if(t != null) {
-            t.setTo(to);
+            t.setTo(to.clone().add(0.5, 0, 0.5));
             save();
         }
     }
@@ -289,17 +295,11 @@ public class TeleporterList {
      * @param l The location the teleporter is teleporting from
      */
     public void remove(Location l) {
-        List<Teleporter> toRemove = new ArrayList<>();
-        for(Teleporter t : tpers) {
-            if(Teleporter.comprareLocations(l, t.getFrom())) {
-                toRemove.add(t);
+        for(int i : tpers.keySet()) {
+            if(Teleporter.comprareLocations(l, tpers.get(i).getFrom())) {
+                tpers.remove(i);
             }
         }
-        // for(Teleporter t : toRemove) {
-        //     Bukkit.getLogger().info("Removing tper from list " + t.seralize());
-        // }
-        tpers.removeAll(toRemove);
-        save();
     }
 
     /**
