@@ -1,6 +1,5 @@
 package dev.orangeben.blinklink;
 
-import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
