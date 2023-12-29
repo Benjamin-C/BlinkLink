@@ -4,5 +4,6 @@
     "java.configuration.updateBuildConfiguration": "interactive",
     "java.saveActions.organizeImports": false,
     "editor.pasteAs.enabled": "false",
-    "editor.pasteAs.showPasteSelector": "never"
+    "editor.pasteAs.showPasteSelector": "never",
+    "java.actionsOnPaste.organizeImports": false
 }

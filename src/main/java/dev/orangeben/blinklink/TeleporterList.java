@@ -9,7 +9,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -41,15 +40,19 @@ public class TeleporterList {
 
         private static String getSaveLocation() {
             String wname = Bukkit.getWorlds().get(0).getName();
+            return wname + File.separatorChar + "blinklinks.bl";
+        }
+        
+        public static String getOldSaveLocation() {
+            String wname = Bukkit.getWorlds().get(0).getName();
             return wname + File.separatorChar + "teleporters.tp";
         }
-
 
         public boolean saveData() {
             try {
                 FileOutputStream fileOut = new FileOutputStream(getSaveLocation());
-                GZIPOutputStream gzOut = new GZIPOutputStream(fileOut);
-                BukkitObjectOutputStream out = new BukkitObjectOutputStream(gzOut);
+                // GZIPOutputStream gzOut = new GZIPOutputStream(fileOut);
+                BukkitObjectOutputStream out = new BukkitObjectOutputStream(fileOut);
                 out.writeObject(stp);
                 out.close();
                 Bukkit.getLogger().info("Saved teleporters to " + getSaveLocation());
@@ -64,13 +67,26 @@ public class TeleporterList {
         @SuppressWarnings("unchecked")
         public static TeleporterList loadData() {
             try {
-                Bukkit.getLogger().info("Loaded teleporters from file " + getSaveLocation() + " ... ");
-                BukkitObjectInputStream in = new BukkitObjectInputStream(new GZIPInputStream(new FileInputStream(getSaveLocation())));
+                BukkitObjectInputStream in = null;
+                boolean wasOldFile = false;
+                try {
+                    in = new BukkitObjectInputStream(new FileInputStream(getSaveLocation()));
+                    Bukkit.getLogger().info("Loaded teleporters from file " + getSaveLocation() + " ... ");
+                } catch(FileNotFoundException e) {
+                    in = new BukkitObjectInputStream(new GZIPInputStream(new FileInputStream(getOldSaveLocation())));
+                    Bukkit.getLogger().info("Loaded teleporters from old file " + getOldSaveLocation() + " ... ");
+                    wasOldFile = true;
+                }
+
                 Object inobj = in.readObject();
                 try {
                     ArrayList<String> stp = (ArrayList<String>) inobj;
                     in.close();
-                    return SerializableTeleporterList.deserialize(stp);
+                    TeleporterList tl = SerializableTeleporterList.deserialize(stp);
+                    if(wasOldFile) {
+                        tl.save();
+                    }
+                    return tl;
                 } catch (ClassCastException e) {
                     try {
                         Bukkit.getLogger().info("Updating old teleport list");
@@ -94,8 +110,11 @@ public class TeleporterList {
                     }
                 }
                 return null;
-            } catch(ClassNotFoundException | FileNotFoundException e) {
+            } catch(FileNotFoundException e) {
                 Bukkit.getLogger().warning("The teleporter file was not found.");
+                return new TeleporterList();
+            } catch(ClassNotFoundException e) {
+                Bukkit.getLogger().warning("The teleporter file was found but had a class error.");
                 return new TeleporterList();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -118,6 +137,7 @@ public class TeleporterList {
      */
     public void add(Teleporter t) {
         t.setID(getNewID());
+        System.out.println(t.getID());
         addInternal(t);
         save();
     }
