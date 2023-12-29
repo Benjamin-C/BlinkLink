@@ -34,10 +34,28 @@ public class Teleporter {
 
     /**
      * Gets the location the teleporter teleports from. This is the air just above the obsidian
-     * @return
+     * @return The Location
      */
     public Location getTo() {
         return to;
+    }
+
+    /**
+     * Sets the location the teleporter teleports from. This is the dragon head.
+     * 
+     * @param l The location
+     */
+    public void setFrom(Location l) {
+        this.from = l;
+    }
+
+    /**
+     * Sets the location the teleporter teleports from. This is the air just above the obsidian
+     * 
+     * @param l The location
+     */
+    public void setTo(Location l) {
+        this.to = l;
     }
 
     /**
@@ -70,15 +88,34 @@ public class Teleporter {
     public boolean equals(Object thatObj) {
         if(thatObj != null && thatObj instanceof Teleporter) {
             Teleporter that = (Teleporter) thatObj;
-            return this.from.getWorld().equals(that.from.getWorld()) && 
-                this.from.getBlockX() == that.from.getBlockX() && 
-                this.from.getBlockY() == that.from.getBlockY() && 
-                this.from.getBlockZ() == that.from.getBlockZ() && 
-                this.to.getBlockX() == that.to.getBlockX() &&
-                this.to.getBlockY() == that.to.getBlockY() &&
-                this.to.getBlockZ() == that.to.getBlockZ();
+            return comprareLocations(this.from, that.from) && comprareLocations(this.to, that.to);
+            // return this.from.getWorld().equals(that.from.getWorld()) && 
+            //     this.from.getBlockX() == that.from.getBlockX() && 
+            //     this.from.getBlockY() == that.from.getBlockY() && 
+            //     this.from.getBlockZ() == that.from.getBlockZ() && 
+            //     (
+            //         (this.to == null && that.to == null) ||
+            //         (this.to != null && that.to != null &&
+            //         this.to.getBlockX() == that.to.getBlockX() &&
+            //         this.to.getBlockY() == that.to.getBlockY() &&
+            //         this.to.getBlockZ() == that.to.getBlockZ())
+            //     );
+                
         }
         return false;
+    }
+
+    public static boolean comprareLocations(Location a, Location b) {
+        return
+            (a == null && b == null) // Both are null
+            ||
+            ( // If Both are not null, then the blocks must match
+                a != null && b != null &&
+                a.getWorld().equals(b.getWorld()) &&
+                a.getBlockX() == b.getBlockX() &&
+                a.getBlockY() == b.getBlockY() &&
+                a.getBlockZ() == b.getBlockZ()
+            );
     }
 
     // Static methods to test if potential or existing teleporters work
@@ -238,6 +275,9 @@ public class Teleporter {
     }
 
     public static Location unjasonizeLocation(String j) {
+        if(j.equals("null")) {
+            return null;
+        }
         var wrapper = new Object() {
             int x, y, z;
             String world = "world";

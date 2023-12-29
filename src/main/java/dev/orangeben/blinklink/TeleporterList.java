@@ -137,7 +137,6 @@ public class TeleporterList {
      */
     public void add(Teleporter t) {
         t.setID(getNewID());
-        System.out.println(t.getID());
         addInternal(t);
         save();
     }
@@ -185,6 +184,20 @@ public class TeleporterList {
      */
     public Teleporter get(Block b) {
         return get(b.getLocation());
+    }
+    /**
+     *  Gets a teleporter by its ID
+     * 
+     * @param id the ID of the desired teleporter
+     * @return   The teleporter if it exists, null otherwise
+     */
+    public Teleporter get(int id) {
+        for(Teleporter t : tpers) {
+            if(t.getID() == id) {
+                return t;
+            }
+        }
+        return null;
     }
 
     /**
@@ -246,14 +259,49 @@ public class TeleporterList {
     }
 
     /**
+     * Updates the to position of a teleporter and saves the list.
+     * @param from The location the teleporter is teleporting from (the dragon head)
+     * @param to   The location the teleporter is teleporting to (the air above the obsidian)
+     */
+    public void updateTo(Location from, Location to) {
+        Teleporter t = get(from);
+        if(t != null) {
+            t.setTo(to);
+            save();
+        }
+    }
+    /**
+     * Updates the to position of a teleporter and saves the list.
+     * @param from The id of the teleporter to modify
+     * @param to   The location the teleporter is teleporting to (the air above the obsidian)
+     */
+    public void updateTo(int from, Location to) {
+        Teleporter t = get(from);
+        if(t != null) {
+            t.setTo(to);
+            save();
+        }
+    }
+
+    /**
      * Removes a teleporter starting from a given location
      * 
      * @param l The location the teleporter is teleporting from
      */
     public void remove(Location l) {
-        tpers.remove(get(l));
+        List<Teleporter> toRemove = new ArrayList<>();
+        for(Teleporter t : tpers) {
+            if(Teleporter.comprareLocations(l, t.getFrom())) {
+                toRemove.add(t);
+            }
+        }
+        // for(Teleporter t : toRemove) {
+        //     Bukkit.getLogger().info("Removing tper from list " + t.seralize());
+        // }
+        tpers.removeAll(toRemove);
         save();
     }
+
     /**
      * Removes a teleporter starting from a given block
      * 
