@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -27,6 +28,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.projectiles.ProjectileSource;
 
+import de.tr7zw.nbtapi.NBTItem;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;
@@ -35,7 +37,8 @@ public class BlinkListener implements Listener {
 
     private TeleporterList tl;
     private static Map<Player, Location> currentTPs;
-    
+    private static Random random = new Random();
+
     public BlinkListener(TeleporterList tl) {
         this.tl = tl;
         currentTPs = new HashMap<Player, Location>();
@@ -120,10 +123,14 @@ public class BlinkListener implements Listener {
             if(Teleporter.isSenderFunctional(bl, e.getPlayer())) {
                 e.getPlayer().sendMessage("You just made a teleporter!");
                 e.getPlayer().sendMessage("Click on the obsidian of the landing pad to link this teleporter to it.");
+                // Generate teleporter ID
+                int tpid = random.nextInt();
+                // Create the teleporter
+                Teleporter tper = new Teleporter(bl, null);
                 // New linking stick
                 ItemStack newtpstick = new ItemStack(Material.STICK);
                 ItemMeta meta = newtpstick.getItemMeta();
-                // Set the name
+                // Set the namewsws
                 meta.displayName(Component.text(Strings.TPSTICK_NAME).color(TextColor.fromHexString("258273")));
                 // Add enchant glint
                 meta.addEnchant(Enchantment.DURABILITY, 1, false);
@@ -139,7 +146,9 @@ public class BlinkListener implements Listener {
                 newtpstick.setItemMeta(meta);
                 // Hide the enchantment name
                 newtpstick.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                e.getPlayer().getInventory().addItem(newtpstick);
+                NBTItem nbti = new NBTItem(newtpstick);
+                nbti.setInteger(Strings.TPSTICK_ID_KEY, tpid);
+                e.getPlayer().getInventory().addItem(nbti.getItem());
                 // e.getPlayer().sendMessage("New stick for you!");
             } else if(BlinkLink.config.getBoolean(ConfigKeys.BUILD_MSG_ON_FAILED_START)){
                 e.getPlayer().sendMessage("That's not a valid teleporter.");
@@ -164,7 +173,11 @@ public class BlinkListener implements Listener {
                     Location l = Teleporter.parseLocation(source);
                     if(Teleporter.isSenderFunctional(l, p)) {
                         p.sendMessage("Teleporter created");
-                        tl.add(new Teleporter(l, dest));
+                        // TODO fix this
+                        Teleporter t = new Teleporter(l, dest);
+                        tl.add(t);
+                        // p.sendMessage(t.seralize());
+                        Teleporter.parse(t.seralize());
                         is.setAmount(0);
                     } else {
                         p.sendMessage("The sender is not functional. Fix it before you can create the link.");

@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -22,29 +23,19 @@ public class TeleporterList {
     private class SerializableTeleporterList implements Serializable {
         private static transient final long serialVersionUID = -1691025206524286331L;
         
-        ArrayList<String[]> stp;
+        ArrayList<String> stp;
 
         public SerializableTeleporterList(TeleporterList tl) {
-            stp = new ArrayList<String[]>();
+            stp = new ArrayList<String>();
             for(Teleporter t : tl.getAll()) {
-                String s[] = {
-                    Teleporter.serializeLocation(t.getFrom()),
-                    Teleporter.serializeLocation(t.getTo())
-                };
-                stp.add(s);
+                stp.add(t.seralize());
             }
         }
 
-        private static TeleporterList deserialize(ArrayList<String[]> stp) {
+        private static TeleporterList deserialize(ArrayList<String> stp) {
             TeleporterList tl = new TeleporterList();
-            for(String[] s : stp) {
-                Location from = Teleporter.parseLocation(s[0]);
-                Location to = Teleporter.parseLocation(s[1]);
-                if(from != null && to != null) {
-                    tl.addInternal(new Teleporter(from, to));
-                } else {
-                    Bukkit.getLogger().warning("Couldn't load teleporter");
-                }
+            for(String s : stp) {
+                tl.addInternal(Teleporter.parse(s));
             }
             return tl;
         }
@@ -76,13 +67,38 @@ public class TeleporterList {
             try {
                 Bukkit.getLogger().info("Loaded teleporters from file " + getSaveLocation() + " ... ");
                 BukkitObjectInputStream in = new BukkitObjectInputStream(new GZIPInputStream(new FileInputStream(getSaveLocation())));
-                ArrayList<String[]> stp = (ArrayList<String[]>) in.readObject();
-                in.close();
-                return SerializableTeleporterList.deserialize(stp);
-            } catch(FileNotFoundException e) {
+                Object inobj = in.readObject();
+                try {
+                    ArrayList<String> stp = (ArrayList<String>) inobj;
+                    in.close();
+                    return SerializableTeleporterList.deserialize(stp);
+                } catch (ClassCastException e) {
+                    try {
+                        Bukkit.getLogger().info("Updating old teleport list");
+                        ArrayList<String[]> stp = (ArrayList<String[]>) inobj;
+                        TeleporterList tl = new TeleporterList();
+                        for(String[] s : stp) {
+                            Location from = Teleporter.parseLocation(s[0]);
+                            Location to = Teleporter.parseLocation(s[1]);
+                            if(from != null && to != null) {
+                                Teleporter t = new Teleporter(from, to);
+                                t.setID(tl.getNewID());
+                                tl.addInternal(t);
+                            } else {
+                                Bukkit.getLogger().warning("Couldn't load teleporter");
+                            }
+                        }
+                        tl.save();
+                        return tl;
+                    } catch (Exception e2) {
+                        e2.printStackTrace();
+                    }
+                }
+                return null;
+            } catch(ClassNotFoundException | FileNotFoundException e) {
                 Bukkit.getLogger().warning("The teleporter file was not found.");
                 return new TeleporterList();
-            } catch (ClassNotFoundException | IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
                 return new TeleporterList();
             }
@@ -90,6 +106,7 @@ public class TeleporterList {
     }
 
     private List<Teleporter> tpers;
+    private int nextID = 1;
 
     public TeleporterList() {
         tpers = new ArrayList<Teleporter>();
@@ -101,6 +118,7 @@ public class TeleporterList {
      * @param t The teleporter to add
      */
     public void add(Teleporter t) {
+        t.setID(getNewID());
         addInternal(t);
         save();
     }
@@ -111,9 +129,19 @@ public class TeleporterList {
                 Bukkit.getLogger().warning("Tried to add duplicate teleporter, can't do that.");
                 return;
             }
+            if(q.getID() == t.getID()) {
+                Bukkit.getLogger().warning("Tried to add duplicate teleporter ID " + t.getID() + ", can't do that.");
+                return;
+            }
         }
         // Add if not duplicate
         tpers.add(t);
+        nextID = Math.max(nextID, t.getID()+1);
+    }
+
+    /** Returns a new ID for a teleporter */
+    protected int getNewID() {
+        return nextID++;
     }
 
     /**
