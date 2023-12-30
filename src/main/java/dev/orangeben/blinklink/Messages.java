@@ -2,17 +2,23 @@ package dev.orangeben.blinklink;
 
 public class Messages {
     
-    public static String CONFIG_RELOADED = "Reloading config";
-    public static String RECEIVER_BROKEN = "The receiver is broken. You must fix it before you can teleport.";
-    public static String RECEIVER_NOT_BUILT = "The receiver has not been linked yet.";
-    public static String SENDER_BROKEN = "This BlinkLink is broken.";
-    public static String BROKE_SENDER = "You just broke a teleporter.";
-    public static String MADE_SENDER = "You just made a teleporter!";
-    public static String MADE_SENDER_INSTRUCTIONS = "Click on the obsidian of the landing pad to link this teleporter to it.";
-    public static String MADE_INVALID_SENDER = "That's not a valid teleporter.";
-    public static String LINK_CREATED = "Teleporter created";
-    public static String SENDER_NONFUNCTIONAL = "The sender is not functional. Fix it before you can create the link.";
-    public static String SENDER_REMOVED = "That sender has been removed.";
-    public static String INVALID_PAD = "That isn't a valid teleporter pad";
+    public static final String CONFIG_RELOADED = "Reloading config";
+
+    // When trying to teleport
+    public static final String RECEIVER_BROKEN = "The landing pad is broken.";
+    public static final String SENDER_BROKEN = "This BlinkLink station is broken.";
+    public static final String RECEIVER_NOT_LINKED = "No landing pad has been linked to this station.";
+    
+    // When creating or destroying a link
+    public static final String BROKE_SENDER = "You just broke a BlinkLink.";
+    public static final String MADE_SENDER = "You just made a BlinkLink station!";
+    public static final String LINK_SENDER_INSTRUCTIONS = "Click on the obsidian of the landing pad with the linking stick to link this station to it.";
+    public static final String LINK_CREATED = "Link created";
+
+    // Invalid structure errors
+    public static final String MADE_INVALID_SENDER = "That's not a valid BlinkLink station.";
+    public static final String SENDER_NONFUNCTIONAL = "The station is broken. Fix it before you can create the link.";
+    public static final String SENDER_REMOVED = "The station associated with this stick has been removed.";
+    public static final String INVALID_PAD = "That isn't a valid landing pad";
 
 }

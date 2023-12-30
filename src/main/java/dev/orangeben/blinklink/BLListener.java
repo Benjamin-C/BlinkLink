@@ -117,7 +117,8 @@ public class BLListener implements Listener {
                             }
                         } else {
                             // If it hasn't been linked, tell user they need to link it first
-                            p.sendMessage(Messages.RECEIVER_NOT_BUILT);
+                            p.sendMessage(Messages.RECEIVER_NOT_LINKED);
+                            p.sendMessage(Messages.LINK_SENDER_INSTRUCTIONS);
                             if(BLPlugin.config.getBoolean(ConfigKeys.TP_CANCEL_ON_BROKEN)) {
                                 currentTPs.put(p, null);
                             }
@@ -157,7 +158,7 @@ public class BLListener implements Listener {
             Location bl = e.getBlock().getLocation();
             if(BlinkLink.isSenderFunctional(bl, e.getPlayer())) {
                 e.getPlayer().sendMessage(Messages.MADE_SENDER);
-                e.getPlayer().sendMessage(Messages.MADE_SENDER_INSTRUCTIONS);
+                e.getPlayer().sendMessage(Messages.LINK_SENDER_INSTRUCTIONS);
                 // Create the BlinkLink
                 BlinkLink tper = new BlinkLink(bl, null);
                 int id = tl.add(tper);
