@@ -29,10 +29,10 @@ import de.tr7zw.nbtapi.NBTItem;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 
-public class BlinkListener implements Listener {
+public class BLListener implements Listener {
 
     /** List of all blinklinks that exist */
-    private TeleporterList tl;
+    private BlinkLinkList tl;
     /** Currently open links since the ender pearl landing event doesn't give info about where the pearl landed.
      *  The pearl land event tells you what block was hit, but doesn't let you set the teleport destination.
      *  The player teleport event lets you change where a pearled player teleports to, but doesn't tell you what block the pearl hit.
@@ -40,7 +40,7 @@ public class BlinkListener implements Listener {
      */ 
     private static Map<Player, Location> currentTPs;
 
-    public BlinkListener(TeleporterList tl) {
+    public BLListener(BlinkLinkList tl) {
         this.tl = tl;
         currentTPs = new HashMap<Player, Location>();
     }
@@ -59,7 +59,7 @@ public class BlinkListener implements Listener {
             Location from = event.getFrom();
             Player p = event.getPlayer();
             // The destination of the teleport would have been determined when the pearl landed in enderPearlLand(), so see if it was.
-            // If not, then the pearl was a normal pearl and not a teleporter pearl.
+            // If not, then the pearl was a normal pearl and not a BlinkLink pearl.
             if(currentTPs.containsKey(p)) {
                 Location to = currentTPs.get(p);
                 if(to != null) {
@@ -74,7 +74,7 @@ public class BlinkListener implements Listener {
                     // Set the destination for the teleport
                     event.setTo(to);
                 } else {
-                    // If to was null, then the teleporter was broken, so the player shouldn't teleport at all
+                    // If to was null, then the BlinkLink was broken, so the player shouldn't teleport at all
                     event.setCancelled(true);
                 }
                 // Remove the teleport we just processed from the list of active teleports.
@@ -91,41 +91,41 @@ public class BlinkListener implements Listener {
             // Details of the event ready for use later
             EnderPearl eep = (EnderPearl) e.getEntity();
             ProjectileSource et = eep.getShooter();
-            // Can't use a blinklink if you're not a player
+            // Can't use a BlinkLink if you're not a player
             if(et instanceof Player) {
                 // More details of the event ready for use later
                 Player p = (Player) et;
                 Block b = e.getHitBlock();
-                // If there is a blinklink on the list that leaves from the block the pearl hit
+                // If there is a BlinkLink on the list that leaves from the block the pearl hit
                 if(tl.check(b.getLocation())) {
-                    // Get that teleporter
-                    Teleporter t = tl.get(b.getLocation());
+                    // Get that BlinkLink
+                    BlinkLink t = tl.get(b.getLocation());
                     // If the sender is functional ...
-                    if(Teleporter.isSenderFunctional(t.getFrom(), p)) {
-                        // Make sure that the blinklink has been linked
+                    if(BlinkLink.isSenderFunctional(t.getFrom(), p)) {
+                        // Make sure that the BlinkLink has been linked
                         if(t.getTo() != null) {
                             // If the receiver is functional ...
-                            if(Teleporter.isReceiverFunctional(t.getTo(), p)) {
-                                // Note that the user is using a blinklink and where it is going to the pearl's teleport can be redirected later
+                            if(BlinkLink.isReceiverFunctional(t.getTo(), p)) {
+                                // Note that the user is using a BlinkLink and where it is going to the pearl's teleport can be redirected later
                                 currentTPs.put(p, t.getTo());
                             } else {
                                 // If the receiver is broken, let the user know
                                 p.sendMessage("The receiver is broken. You must fix it before you can teleport.");
-                                if(BlinkLink.config.getBoolean(ConfigKeys.TP_CANCEL_ON_BROKEN)) {
+                                if(BLPlugin.config.getBoolean(ConfigKeys.TP_CANCEL_ON_BROKEN)) {
                                     currentTPs.put(p, null);
                                 }
                             }
                         } else {
                             // If it hasn't been linked, tell user they need to link it first
                             p.sendMessage("The receiver has not been built yet.");
-                            if(BlinkLink.config.getBoolean(ConfigKeys.TP_CANCEL_ON_BROKEN)) {
+                            if(BLPlugin.config.getBoolean(ConfigKeys.TP_CANCEL_ON_BROKEN)) {
                                 currentTPs.put(p, null);
                             }
                         }
                     } else {
                         // If the sender isn't functional, tell the user so they know they need to fix it
-                        p.sendMessage("This teleporter is broken.");
-                        if(BlinkLink.config.getBoolean(ConfigKeys.TP_CANCEL_ON_BROKEN)) {
+                        p.sendMessage("This BlinkLink is broken.");
+                        if(BLPlugin.config.getBoolean(ConfigKeys.TP_CANCEL_ON_BROKEN)) {
                             currentTPs.put(p, null);
                         }
                     }
@@ -134,7 +134,7 @@ public class BlinkListener implements Listener {
         }
     }
 
-    // When a blinklink is broken by breaking the dragon head
+    // When a BlinkLink is broken by breaking the dragon head
     @EventHandler
     public void playerBreakTeleporterEvent(BlockBreakEvent e) {
         // If the broken block was a dragon head
@@ -148,18 +148,18 @@ public class BlinkListener implements Listener {
         }
     }
 
-    // When a player creates a new blinklink
+    // When a player creates a new BlinkLink
     @EventHandler
     public void playerMakeTeleporterEvent(BlockPlaceEvent e) {
         // If they placed a dragon head
         if(e.getBlock().getType() == Material.DRAGON_WALL_HEAD) {
-            // Might be a teleporter, let's see!
+            // Might be a BlinkLink, let's see!
             Location bl = e.getBlock().getLocation();
-            if(Teleporter.isSenderFunctional(bl, e.getPlayer())) {
+            if(BlinkLink.isSenderFunctional(bl, e.getPlayer())) {
                 e.getPlayer().sendMessage("You just made a teleporter!");
                 e.getPlayer().sendMessage("Click on the obsidian of the landing pad to link this teleporter to it.");
-                // Create the teleporter
-                Teleporter tper = new Teleporter(bl, null);
+                // Create the BlinkLink
+                BlinkLink tper = new BlinkLink(bl, null);
                 int id = tl.add(tper);
                 // New linking stick
                 ItemStack newtpstick = new ItemStack(Material.STICK);
@@ -185,7 +185,7 @@ public class BlinkListener implements Listener {
                 nbti.setInteger(Strings.TPSTICK_ID_KEY, id);
                 // Give the item to a player
                 e.getPlayer().getInventory().addItem(nbti.getItem());
-            } else if(BlinkLink.config.getBoolean(ConfigKeys.BUILD_MSG_ON_FAILED_START)) {
+            } else if(BLPlugin.config.getBoolean(ConfigKeys.BUILD_MSG_ON_FAILED_START)) {
                 // Let the player know that the place they put the dragon head isn't a valid blinklink start
                 e.getPlayer().sendMessage("That's not a valid teleporter.");
             }
@@ -207,23 +207,23 @@ public class BlinkListener implements Listener {
             // Don't continue if the item doesn't have the right NBT data
             NBTItem ni = new NBTItem(is);
             if(!ni.hasTag(Strings.TPSTICK_ID_KEY)) { return; }
-            // Get the location for the teleporter which is one block above the one the player clicked on
+            // Get the location for the BlinkLink which is one block above the one the player clicked on
             Location dest = e.getClickedBlock().getLocation().add(0, 1, 0);
             Player p = e.getPlayer();
             // If this is a valid receiving structure
-            if(Teleporter.isReceiverFunctional(dest, p)) {
+            if(BlinkLink.isReceiverFunctional(dest, p)) {
                 // Get the link ID and blinklink
                 int id = ni.getInteger(Strings.TPSTICK_ID_KEY);
-                Teleporter t = tl.get(id);
+                BlinkLink t = tl.get(id);
                 if(t != null) {
-                    if(Teleporter.isSenderFunctional(t.getFrom(), p)) {
-                        // Set the destination of the teleporter
+                    if(BlinkLink.isSenderFunctional(t.getFrom(), p)) {
+                        // Set the destination of the BlinkLink
                         tl.updateTo(id, dest);
                         // Alert the user
                         p.sendMessage("Teleporter created");
                         // Remove their stick
                         is.setAmount(0);
-                        Teleporter.isReceiverFunctional(tl.get(id).getTo(), p);
+                        BlinkLink.isReceiverFunctional(tl.get(id).getTo(), p);
                     } else {
                         p.sendMessage("The sender is not functional. Fix it before you can create the link.");
                     }

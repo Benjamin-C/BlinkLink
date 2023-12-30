@@ -111,7 +111,7 @@ public class LocationUtils {
                     wrapper.world = value;
                 } break;
                 default: {
-                    Bukkit.getLogger().warning("Unknown key " + key + "=" + value + " found while parsing Teleporter.");
+                    Bukkit.getLogger().warning("Unknown key " + key + "=" + value + " found while parsing location.");
                 } break;
             }
         });

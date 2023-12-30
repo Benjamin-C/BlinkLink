@@ -118,15 +118,15 @@ public class TestableBlock {
         ) {
             // If the block matches ...
             // Broadcast messages to all players
-            if(BlinkLink.config.getBoolean(ConfigKeys.TEST_BROADCAST)) {
+            if(BLPlugin.config.getBoolean(ConfigKeys.TEST_BROADCAST)) {
                 Bukkit.broadcastMessage("Found " + matstr + " at " + tgt.getBlockX() + ", " + tgt.getBlockY() + ", " + tgt.getBlockZ() + " " + tgt.getWorld().getName() + ".");
             }
             // Send messages to the player initiating the test
-            if(p != null && BlinkLink.config.getBoolean(ConfigKeys.TEST_MESSAGE)) {
+            if(p != null && BLPlugin.config.getBoolean(ConfigKeys.TEST_MESSAGE)) {
                 p.sendMessage("Found " + matstr + " at " + tgt.getBlockX() + ", " + tgt.getBlockY() + ", " + tgt.getBlockZ() + " " + tgt.getWorld().getName() + ".");
             }
             // Create particles
-            if(p != null && BlinkLink.config.getBoolean(ConfigKeys.TEST_PARTICLE) && !suppressParticle) {
+            if(p != null && BLPlugin.config.getBoolean(ConfigKeys.TEST_PARTICLE) && !suppressParticle) {
                 DustOptions dustOptions = new DustOptions(Color.fromRGB(0, 255, 0), 1.0F);
                 p.spawnParticle(Particle.REDSTONE, tgt.clone().add(0.5, 0.5, 0.5), 10, dustOptions);
             }
@@ -135,15 +135,15 @@ public class TestableBlock {
         }
         // If the block didn't match ...
         // Broadcast messages to all players
-        if(BlinkLink.config.getBoolean(ConfigKeys.TEST_BROADCAST)) {
+        if(BLPlugin.config.getBoolean(ConfigKeys.TEST_BROADCAST)) {
             Bukkit.broadcastMessage("Looking for " + matstr + " at " + tgt.getBlockX() + ", " + tgt.getBlockY() + ", " + tgt.getBlockZ() + " " + tgt.getWorld().getName() + ", found " + tgt.getBlock().getType());
         }
         // Send messages to the player initiating the test
-        if(p != null && BlinkLink.config.getBoolean(ConfigKeys.TEST_MESSAGE)) {
+        if(p != null && BLPlugin.config.getBoolean(ConfigKeys.TEST_MESSAGE)) {
             p.sendMessage("Looking for " + matstr + " at " + tgt.getBlockX() + ", " + tgt.getBlockY() + ", " + tgt.getBlockZ() + " " + tgt.getWorld().getName() + ", found " + tgt.getBlock().getType());
         }
         // Create particles
-        if(p != null && BlinkLink.config.getBoolean(ConfigKeys.TEST_PARTICLE) && !suppressParticle) {
+        if(p != null && BLPlugin.config.getBoolean(ConfigKeys.TEST_PARTICLE) && !suppressParticle) {
             DustOptions dustOptions = new DustOptions(Color.fromRGB(255, 0, 0), 1.0F);
             p.spawnParticle(Particle.REDSTONE, tgt.clone().add(0.5, 0.5, 0.5), 10, dustOptions);
             p.spawnParticle(Particle.EXPLOSION_NORMAL, tgt.clone().add(0.5, 0.5, 0.5), 1);
