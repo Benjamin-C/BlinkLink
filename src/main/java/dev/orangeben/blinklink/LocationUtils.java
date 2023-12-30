@@ -8,7 +8,14 @@ import org.bukkit.Location;
 
 public class LocationUtils {
 
-    public static boolean comprareLocations(Location a, Location b) {
+    /**
+     * Compares two {@link org.bukkit.Location#Location Location} by their world, and block X,Y,&Z components.
+     * 
+     * @param a The {@link org.bukkit.Location#Location Location} to compare
+     * @param b The {@link org.bukkit.Location#Location Location} to compare to
+     * @return If they are the same block XYZ place in the same world 
+     */
+    public static boolean compare(Location a, Location b) {
         return
             (a == null && b == null) // Both are null
             ||
@@ -22,9 +29,19 @@ public class LocationUtils {
     }
 
     public interface JSONParser {
+        /**
+         * Parses a key/value pair from a JSON string
+         * @param key   the key string
+         * @param value the value string
+         */
         public void parsePair(String key, String value);
     }
 
+    /**
+     * Parses the next level of SON
+     * @param s the JSON string to parse
+     * @param p the callback to run on each key/value pair
+     */
     public static void parseJSONLevel(String s, JSONParser p) {
         Pattern ptn = Pattern.compile("(?:\\\"(\\w+)\\\"):(?:(?:\\\"(\\w+)\\\")|(\\{[^\\}]*\\})|(\\d+))");
         // From regexer (?:\"(\w+)\"):(?:(?:\"(\w+)\")|(?:\{([^\}]*)})|(\d+))
@@ -41,6 +58,11 @@ public class LocationUtils {
         }
     }
 
+    /**
+     * Serializes a {@link org.bukkit.Location#Location Location} to a JSON string. Only stores the floored XYZ values and the string name of the world
+     * @param l The {@link org.bukkit.Location#Location Location} to store
+     * @return  The JSON string of that
+     */
     public static String serialize(Location l) {
         if(l != null) {
             return String.format("{\"world\":\"%s\",\"x\":%d,\"y\":%d,\"z\":%d}", l.getWorld().getName(), l.getBlockX(), l.getBlockY(), l.getBlockZ());
@@ -49,6 +71,11 @@ public class LocationUtils {
         }
     }
 
+    /**
+     * Parses a JSON string into a {@link org.bukkit.Location#Location Location}
+     * @param j the JSON string
+     * @return  the {@link org.bukkit.Location#Location Location} represented by that string
+     */
     public static Location deserialize(String j) {
         if(j.equals("null")) {
             return null;
@@ -91,11 +118,23 @@ public class LocationUtils {
         return new Location(Bukkit.getWorld(wrapper.world), wrapper.x, wrapper.y, wrapper.z);
     }
 
+    /**
+     * Turns a {@link org.bukkit.Location#Location Location} into a custom string in the format worldname<X,Y,Z>
+     * @deprecated Use {@link #serialize(Location)} to serialize into JSON
+     * @param l The {@link org.bukkit.Location#Location Location}
+     * @return  The custom string
+     */
     @Deprecated
     public static String serializeLocation(Location l) {
         return l.getWorld().getName() + "<" + l.getBlockX() + "," + l.getBlockY() + "," + l.getBlockZ() + ">";
     }
 
+    /**
+     * Turns a custom string in the format worldname<X,Y,Z> into a {@link org.bukkit.Location#Location Location}
+     * @deprecated Use {@link #serialize(Location)} to serialize into JSON
+     * @param l The custom string
+     * @return  The {@link org.bukkit.Location#Location Location}
+     */
     @Deprecated
     public static Location parseLocation(String s) {
         Pattern p = Pattern.compile("([^<]+)<(-?\\d+),(-?\\d+),(-?\\d+)");

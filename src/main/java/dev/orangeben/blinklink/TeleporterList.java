@@ -217,7 +217,7 @@ public class TeleporterList implements Serializable {
     public void remove(Location l) {
         List<Integer> tr = new ArrayList<Integer>();
         for(int i : tpers.keySet()) {
-            if(LocationUtils.comprareLocations(l, tpers.get(i).getFrom())) {
+            if(LocationUtils.compare(l, tpers.get(i).getFrom())) {
                 // tpers.remove(i);
                 tr.add(i);
             }

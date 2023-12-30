@@ -87,7 +87,7 @@ public class Teleporter implements Serializable {
     public boolean equals(Object thatObj) {
         if(thatObj != null && thatObj instanceof Teleporter) {
             Teleporter that = (Teleporter) thatObj;
-            return LocationUtils.comprareLocations(this.from, that.from) && LocationUtils.comprareLocations(this.to, that.to);
+            return LocationUtils.compare(this.from, that.from) && LocationUtils.compare(this.to, that.to);
         }
         return false;
     }
