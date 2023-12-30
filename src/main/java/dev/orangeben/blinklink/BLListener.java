@@ -64,7 +64,7 @@ public class BLListener implements Listener {
                 Location to = currentTPs.get(p);
                 if(to != null) {
                     // Add a half a block in X and Z so that the player teleports to the middle of the block and set the direction so the player doesn't turn
-                    to = to.clone().add(0.5, 0, 0.5).setDirection(from.getDirection());
+                    to = to.clone().add(0.5, 0d, 0.5).setDirection(from.getDirection());
                     // If the target dimension is different, we need to send the player there first
                     // Otherwise the player doesn't go there even though the location is the same.
                     if(!to.getWorld().equals(from.getWorld())) {
