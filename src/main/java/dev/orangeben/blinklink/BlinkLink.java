@@ -11,7 +11,6 @@ public class BlinkLink extends JavaPlugin {
     @Override
     public void onEnable() {
         // Load plugin config
-        // TODO this might be overwriting existing config, fix
         this.saveDefaultConfig();
         config = this.getConfig();
         // Initialize TPer location
@@ -26,6 +25,7 @@ public class BlinkLink extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        // Don't save config since we never change it
         // Save the config.
         // this.saveConfig();
         // Say bye
