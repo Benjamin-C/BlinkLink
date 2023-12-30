@@ -19,7 +19,9 @@ import dev.orangeben.blinklink.TestableBlock.TestType;
  */
 public class Teleporter implements Serializable {
     
+    /** The location the teleporter is leaving from (the dragon head) */
     protected Location from = null;
+    /** The location the teleporter is going to (the air above the obsidian) */
     protected Location to = null;
 
     public Teleporter(Location from, Location to) {
@@ -92,17 +94,20 @@ public class Teleporter implements Serializable {
         return false;
     }
 
+    // From Serializable
     private void writeObject(ObjectOutputStream oos) throws IOException {
         oos.writeObject(LocationUtils.serialize(from));
         oos.writeObject(LocationUtils.serialize(to));
     }
 
+    // From Serializable
     private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
         this.setFrom(LocationUtils.deserialize((String) ois.readObject()));
         this.setTo(LocationUtils.deserialize((String) ois.readObject()));
     }
 
     // Static methods to test if potential or existing teleporters work
+    /** Description of the sending structure */
     private static TestableBlock fromPortalArrangement[] = {
         // Center dragon head
         new TestableBlock(0, 0, 0, Material.DRAGON_WALL_HEAD),
