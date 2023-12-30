@@ -82,7 +82,7 @@ public class BlinkLink implements Serializable {
 
     @Override
     public String toString() {
-        return "Teleporter (" + from.getBlockX() + ", " + from.getBlockY() + ", " + from.getBlockZ() + ")";
+        return "BlinkLink (" + from.getBlockX() + ", " + from.getBlockY() + ", " + from.getBlockZ() + ")";
     }
 
     @Override
@@ -106,7 +106,6 @@ public class BlinkLink implements Serializable {
         this.setTo(LocationUtils.deserialize((String) ois.readObject()));
     }
 
-    // Static methods to test if potential or existing teleporters work
     /** Description of the sending structure */
     private static TestableBlock fromPortalArrangement[] = {
         // Center dragon head

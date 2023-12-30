@@ -110,21 +110,21 @@ public class BLListener implements Listener {
                                 currentTPs.put(p, t.getTo());
                             } else {
                                 // If the receiver is broken, let the user know
-                                p.sendMessage("The receiver is broken. You must fix it before you can teleport.");
+                                p.sendMessage(Messages.RECEIVER_BROKEN);
                                 if(BLPlugin.config.getBoolean(ConfigKeys.TP_CANCEL_ON_BROKEN)) {
                                     currentTPs.put(p, null);
                                 }
                             }
                         } else {
                             // If it hasn't been linked, tell user they need to link it first
-                            p.sendMessage("The receiver has not been built yet.");
+                            p.sendMessage(Messages.RECEIVER_NOT_BUILT);
                             if(BLPlugin.config.getBoolean(ConfigKeys.TP_CANCEL_ON_BROKEN)) {
                                 currentTPs.put(p, null);
                             }
                         }
                     } else {
                         // If the sender isn't functional, tell the user so they know they need to fix it
-                        p.sendMessage("This BlinkLink is broken.");
+                        p.sendMessage(Messages.SENDER_BROKEN);
                         if(BLPlugin.config.getBoolean(ConfigKeys.TP_CANCEL_ON_BROKEN)) {
                             currentTPs.put(p, null);
                         }
@@ -142,7 +142,7 @@ public class BLListener implements Listener {
             // If the head was a teleporter
             if(tl.check(e.getBlock().getLocation())) {
                 // Tell whoever broke it that it was a teleporter
-                e.getPlayer().sendMessage("You just broke a teleporter.");
+                e.getPlayer().sendMessage(Messages.BROKE_SENDER);
                 tl.remove(e.getBlock().getLocation());
             }
         }
@@ -156,8 +156,8 @@ public class BLListener implements Listener {
             // Might be a BlinkLink, let's see!
             Location bl = e.getBlock().getLocation();
             if(BlinkLink.isSenderFunctional(bl, e.getPlayer())) {
-                e.getPlayer().sendMessage("You just made a teleporter!");
-                e.getPlayer().sendMessage("Click on the obsidian of the landing pad to link this teleporter to it.");
+                e.getPlayer().sendMessage(Messages.MADE_SENDER);
+                e.getPlayer().sendMessage(Messages.MADE_SENDER_INSTRUCTIONS);
                 // Create the BlinkLink
                 BlinkLink tper = new BlinkLink(bl, null);
                 int id = tl.add(tper);
@@ -187,7 +187,7 @@ public class BLListener implements Listener {
                 e.getPlayer().getInventory().addItem(nbti.getItem());
             } else if(BLPlugin.config.getBoolean(ConfigKeys.BUILD_MSG_ON_FAILED_START)) {
                 // Let the player know that the place they put the dragon head isn't a valid blinklink start
-                e.getPlayer().sendMessage("That's not a valid teleporter.");
+                e.getPlayer().sendMessage(Messages.MADE_INVALID_SENDER);
             }
         }
     }
@@ -220,20 +220,20 @@ public class BLListener implements Listener {
                         // Set the destination of the BlinkLink
                         tl.updateTo(id, dest);
                         // Alert the user
-                        p.sendMessage("Teleporter created");
+                        p.sendMessage(Messages.LINK_CREATED);
                         // Remove their stick
                         is.setAmount(0);
                         BlinkLink.isReceiverFunctional(tl.get(id).getTo(), p);
                     } else {
-                        p.sendMessage("The sender is not functional. Fix it before you can create the link.");
+                        p.sendMessage(Messages.SENDER_NONFUNCTIONAL);
                     }
                 } else {
-                    p.sendMessage("That sender has been removed.");
+                    p.sendMessage(Messages.SENDER_REMOVED);
                     // Remove their stick if the sender no longer exists
                     is.setAmount(0);
                 }
             } else {
-                p.sendMessage("That isn't a valid teleporter pad");
+                p.sendMessage(Messages.INVALID_PAD);
             }
         }
     }
